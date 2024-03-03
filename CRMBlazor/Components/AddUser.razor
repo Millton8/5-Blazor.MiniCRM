@@ -1,0 +1,32 @@
+﻿@page "/adduser"
+@inject ApplicationContext db
+<h3>AddUser</h3>
+<input type="text" @bind-value=name/>
+<p>@name</p>
+<button @onclick="GetUser">Создать</button>
+@if (Users!=null)
+@foreach (var item in Users)
+{
+    <p>@item.Name</p>
+    
+}
+
+@code {
+    string name;
+    User user=new();
+    List<User> Users { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+
+        Users = db.Users.ToList();
+    }
+
+
+    void GetUser()
+    {
+        db.Users.Add(user);
+        db.SaveChanges();
+
+    }
+
+}

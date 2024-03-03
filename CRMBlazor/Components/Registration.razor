@@ -1,0 +1,39 @@
+﻿@page "/registry"
+@using CRMBlazor.Methods
+@inject StagesCRUD db
+@inject NavigationManager Navigation
+
+<PageTitle>Регистрация</PageTitle>
+<h3>Registration</h3>
+<input type="text" @bind-value=name />
+<input type="password" @bind-value=password />
+<input type="password" @bind-value=password2 />
+<button @onclick="Registry">Ввести</button>
+<p>@message</p>
+
+
+@code {
+    string name;
+    string password;
+    string password2;
+    string message;
+
+    async Task Registry()
+    {
+        if (password==password2)
+        {
+            db.AddUser(new User { Name = name, Password = HashPassword.HashPasword(password), UserRoleId=1 });
+            message = "Регистрация прошла успешно./n Вы будете перемещены на страницу входа";
+            await Task.Delay(3000);
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            message = "Пароли не совпадают. Введите заново";
+            password = "";
+            password2 = "";
+        }
+
+        }
+
+}

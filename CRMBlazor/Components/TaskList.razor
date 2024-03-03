@@ -1,0 +1,51 @@
+﻿@page "/taskl"
+@inject StagesCRUD db
+@inject NavigationManager Navigation
+<h3>TaskList</h3>
+<AuthorizeView Roles="Regular">
+    <p>
+        allClear
+    </p>
+</AuthorizeView>
+<AuthorizeView>
+
+    <Authorized>
+        <p>Дождитесь выдачи прав администратором</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>Вы не авторизованны</p>
+    </NotAuthorized>
+</AuthorizeView>
+@if(orders==null)
+{
+    
+}
+else
+{
+    foreach (var item in orders)
+    {
+        <p>@item.Name-@item.Phone</p>
+        <ul>
+            @foreach (var task in item.UserTasks)
+            {
+                <li>
+                    @task.Description
+                </li>
+            }
+        </ul>
+    }
+    
+}
+
+@code {
+    List<Order>? orders;
+    List<UserTask>? userTasks;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        orders = await db.GetOrdersWithTasks();
+
+    }
+
+}

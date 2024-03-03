@@ -1,0 +1,133 @@
+﻿@page "/gradv"
+@inject StagesCRUD db
+@using CRMBlazor.Models.Statistics;
+@using MudBlazor
+@using ApexCharts;
+
+<h3>Расходы на рекламу</h3>
+
+<br/>
+<div>
+    <ApexChart TItem="MyDigits"
+           Title="Sample Data"
+               Options=options>
+
+        <ApexPointSeries TItem="MyDigits"
+                         Items="myDigits"
+                     Name="Общие расходы"
+                     SeriesType="SeriesType.Line"
+                     XValue="e => e.xAxis"
+                     YValue="e=> e.yAxis"
+                         Color="#F1948A"
+                                  ShowDataLabels />
+
+         <ApexPointSeries TItem="MyDigits"
+                          Items="myDigits"
+                     Name="Покраска"
+                     SeriesType="SeriesType.Line"
+                     XValue="e => e.xAxis"
+                     YValue="e=> e.pokrs"
+                                  ShowDataLabels Color="#ABEBC6" />
+
+         <ApexPointSeries TItem="MyDigits"
+                          Items="myDigits"
+                          Name="Шпаклевка"
+                          SeriesType="SeriesType.Line"
+                          XValue="e => e.xAxis"
+                          YValue="e=> e.shpakl"
+                                  ShowDataLabels Color="#EDBB99" />
+         <ApexPointSeries TItem="MyDigits"
+                          Items="myDigits"
+                          Name="Демонтаж"
+                          SeriesType="SeriesType.Line"
+                          XValue="e => e.xAxis"
+                          YValue="e=> e.demont"
+                                  ShowDataLabels Color="#AED6F1" />
+     </ApexChart>
+</div>
+
+
+ @code {
+    List<AdvertiseStatatisticsByJobTypes> advStats;
+    int[] myd = new int[12];
+    int[] mydpokr = new int[12];
+    int[] mydshpakl = new int[12];
+    int[] myddemont = new int[12];
+    int i = 0;
+    int dateExist = -1;
+    List<MyDigits> myDigits = new();
+    private ApexChartOptions<MyDigits> options;
+
+
+    private int Index = -1; 
+
+    public List<ChartSeries> Series = new List<ChartSeries>();
+
+    public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        options = new ApexChartOptions<MyDigits>
+            {
+                Theme = new Theme
+                {
+                    Mode = Mode.Dark
+                    
+                }
+            };
+
+        advStats = await db.GetAdvStatsByJob();
+
+        foreach (var item in advStats)
+        {
+            dateExist = -1;
+            
+            foreach (var itemk in item.AdvByJobTypes)
+            {
+
+                myd[i] += itemk.Expense;
+                if (itemk.jobType.Name == "Покраска")
+                {
+                    mydpokr[i] += itemk.Expense;
+                }
+                else if (itemk.jobType.Name == "Шпаклевка")
+                {
+                    mydshpakl[i] += itemk.Expense;
+                }
+                else if (itemk.jobType.Name == "Демонтаж")
+                {
+                    myddemont[i] += itemk.Expense;
+                }
+            }
+           
+            dateExist=myDigits.FindIndex(x => x.xAxis == item.Date.ToString("MMMM.y"));
+            if (dateExist!=-1)
+            {
+
+                myDigits[dateExist].yAxis += myd[i];
+                myDigits[dateExist].pokrs += mydpokr[i];
+                myDigits[dateExist].shpakl += mydshpakl[i];
+                myDigits[dateExist].demont += myddemont[i];
+            }
+            else
+            myDigits.Add(new MyDigits()
+                    {
+                    xAxis = item.Date.ToString("MMMM.y"),
+                        yAxis = myd[i],
+                        pokrs = mydpokr[i],
+                        shpakl = mydshpakl[i],
+                        demont=myddemont[i]
+                    });
+                i++;
+                    }
+        
+    }
+    class MyDigits
+    {
+        public string xAxis;
+        public int yAxis=0;
+        public int pokrs=0;
+        public int shpakl=0;
+        public int demont = 0;
+    }
+}

@@ -1,0 +1,136 @@
+﻿@page "/addinfo"
+@using CRMBlazor.Components.UI
+@using CRMBlazor.Interface
+@inject StagesCRUD db
+@* @inject ApplicationContext appcontext *@
+<h3>Добавить пользователя</h3>
+<input type="text" @bind-value=user.Name />
+<button @onclick="AddUser">Add</button>
+
+<h3>Добавить этап продаж</h3>
+<input type="text" @bind-value=stage.Name />
+<button @onclick="AddStage">Add</button>
+
+<h3>Добавить тип работ</h3>
+<input type="text" @bind-value=jobType.Name />
+<button @onclick="AddJobType">Add</button>
+
+<h3>Добавить источник рекламы</h3>
+<input type="text" @bind-value=advSource.Name />
+<button @onclick="AddAdvertisingSource">Add</button>
+
+<h3>Добавить Тестик</h3>
+<input type="text" @bind-value=user.Name />
+<button @onclick="Testim">Add</button>
+
+<h3>Добавить Тестик2</h3>
+<input type="text" @bind-value=advSource.Name />
+<button @onclick="Testim2">Add</button>
+
+<h3>Пользователи</h3>
+<PrintList list="users"/>
+
+<h3>Этапы</h3>
+<PrintList list="stages" />
+
+<h3>Виды работ</h3>
+<PrintList list="jobTypes" />
+
+<h3>Источники рекламы</h3>
+<PrintList list="advSources" />
+    
+
+
+@code {
+    Stage? stage=new();
+    List<Stage>? stages;
+
+    User? user = new();
+    List<User>? users;
+
+    JobType? jobType = new();
+    List<JobType>? jobTypes;
+
+    AdvertisingSource? advSource = new();
+    List<AdvertisingSource>? advSources;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        stages = await db.GetStages();
+        users = await db.GetUsers();
+        jobTypes = await db.GetJobTypes();
+        advSources = await db.GetAdvertisingSources();
+
+        foreach (var item in users)
+        {
+            Console.WriteLine("33> "+item.Id+" "+item.Name);
+        }
+
+    }
+    async Task AddStage()
+    {
+        await db.AddStage(stage);
+        stage = new();
+        stages = new();
+        stages = await db.GetStages();
+    }
+
+    async Task AddUser()
+    {
+        await db.AddUser(user);
+
+        user = new();
+        users = await db.GetUsers();
+    }
+    async Task Testim()
+    {
+        //user.Role = "regular";
+        await db.AddGeneric(user);
+        //user = new();
+        //users = await db.GetUsers();
+    }
+    async Task Testim2()
+    {
+        await db.AddGeneric(advSource);
+        //user = new();
+        //users = await db.GetUsers();
+    }
+    async Task DellStage(Stage stage)
+    {
+        await db.RemoveStage(stage);
+        stages = await db.GetStages();
+
+    }
+
+    async Task AddJobType()
+    {
+        await db.AddJobType(jobType);
+        jobType = new();
+        jobTypes = new();
+        jobTypes = await db.GetJobTypes();
+    }
+    async Task AddAdvertisingSource()
+    {
+        await db.AddAdvertisingSource(advSource);
+        advSource = new();
+        advSources = new();
+        advSources = await db.GetAdvertisingSources();
+    }
+
+    // object Print<T>(List<T> objs)
+    // {
+    //     // if (objs is List<User> user)
+    //     // {
+    //     //     foreach (var item in user)
+    //     //     {
+    //     //         <li>@item.Name</li>
+    //     //     }
+    //     //     return 1;
+    //     // }
+    //     // else
+    //     // return 0;
+    // }
+
+
+}

@@ -1,0 +1,77 @@
+﻿@page "/task"
+@page "/task/{Id:int}"
+@inject ApplicationContext db
+@inject StagesCRUD db
+
+
+<h3>AddTask</h3>
+<button @onclick="get">get</button>
+<button @onclick="gogo">go</button>
+<br/>
+<input type="text" @bind-value=userTask.Description/>
+<input type="date" @bind-value=userTask.StartDate />
+<input type="date" @bind-value=userTask.NotifyDate/>
+<button @onclick="addTask">Добавить</button>
+@if(ut!=null)
+foreach (var item in ut)
+    {
+        <p>- @item.Description s @item.Status</p>
+    }
+
+@code {
+
+    [CascadingParameter]
+    Task<AuthenticationState>? authenticationStateTask { get; set; }
+    [Parameter]
+    public int Id { get; set; } = 0;
+
+    List<Models.UserTask> ut { get; set; }
+    UserTask userTask = new();
+
+    async System.Threading.Tasks.Task get()
+    {
+
+        var authState = await authenticationStateTask;
+
+
+        foreach (var item in authState.User.Identities)
+        {
+            foreach (var i in item.Claims)
+            {
+                Console.WriteLine(i.Type+" <-Type Value-> "+i.Value+" VT "+i.ValueType);
+
+            }
+        }
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+
+    }
+    async System.Threading.Tasks.Task gogo()
+    {
+        var authState = await authenticationStateTask;
+        Console.WriteLine("> " + authState.User.Identity.Name);
+        
+        if (authState.User.Identity.Name == null)
+        {
+
+            Console.WriteLine("null " + authState.User.Identity.Name);
+        }
+        else
+        {
+
+            Console.WriteLine("not null " + authState.User.Identity.Name);
+
+        }
+    }
+    async Task addTask()
+    {
+        userTask.OrderId = 1;
+        userTask.UserId = 1;
+        await db.AddUserTask(userTask);
+
+    }
+}

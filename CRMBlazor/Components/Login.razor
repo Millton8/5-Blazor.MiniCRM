@@ -1,0 +1,72 @@
+﻿@page "/login"
+@using System.Security.Claims
+@using System.Security.Cryptography;
+@using System.Text;
+@inject AuthenticationStateProvider AuthStateProvider
+@inject StagesCRUD db
+@inject NavigationManager Navigation
+
+<PageTitle>Вход в систему</PageTitle>
+<h3>Login_Jack</h3>
+<input type="text" @bind-value=name/>
+<input type="password" @bind-value=password />
+<button class="btn-primary" @onclick="LoginByPassword">Ввести</button>
+<p>@message</p>
+@code {
+    string name;
+    string password;
+    string message = null;
+    bool check = false;
+    User myuser=new();
+    [CascadingParameter]
+    Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+    async Task LoginByPassword()
+    {
+        var isUser = await db.isUser(name);
+        if (isUser)
+        {
+            var hashedPassword = HashPasword(password);
+            check = await db.isPassword(name, hashedPassword);
+            if (!check)
+            {
+                message = "Неверный пароль";
+                return;
+            }
+            myuser = await db.GetUserByName(name);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            message = "Неверное имя пользователя";
+            return;
+        }
+
+        var authState = await authenticationStateTask;
+
+        var identity = new ClaimsIdentity(new[]
+                {
+                     new Claim(ClaimTypes.Name, myuser.Name),
+                     new Claim(ClaimTypes.Role, myuser.UserRole.Name),
+     }, "MyUser");
+        var user = new ClaimsPrincipal(identity);
+        authState.User.AddIdentity(identity);
+
+        ((ServerAuthenticationStateProvider)AuthStateProvider).SetAuthenticationState(Task.FromResult(new AuthenticationState(user)));
+        Console.WriteLine("ok "+myuser.Name+" "+myuser.UserRole.Name);
+    }
+    string HashPasword(string password)
+    {
+        const int keySize = 58;
+        const int iterations = 10000;
+        HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
+        var salt = new byte[58] { 157, 5, 188, 100, 208, 157, 90, 101, 236, 20, 31, 181, 38, 28, 62, 233, 127, 170, 20, 77, 211, 230, 171, 17, 181, 214, 90, 248, 239, 5, 90, 4, 66, 149, 175, 164, 39, 115, 203, 110, 71, 20, 206, 225, 77, 65, 30, 71, 150, 181, 129, 187, 66, 48, 223, 27, 255, 205 };
+        var hash = Rfc2898DeriveBytes.Pbkdf2(
+            Encoding.UTF8.GetBytes(password),
+            salt,
+            iterations,
+            hashAlgorithm,
+            keySize);
+        return Convert.ToHexString(hash);
+    }
+}

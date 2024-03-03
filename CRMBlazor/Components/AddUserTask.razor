@@ -1,0 +1,15 @@
+﻿@page "/ut"
+@inject StagesCRUD db
+<h3>AddUserTask</h3>
+
+@code {
+    List<User> users;
+    protected override async Task OnInitializedAsync()
+    {
+        users = await db.GetUsers();
+
+        db.AddUserTask(new UserTask{Description="Spat",UserId=1,Status=true });
+    }
+
+
+}

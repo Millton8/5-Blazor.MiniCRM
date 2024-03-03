@@ -1,0 +1,184 @@
+﻿@page "/add"
+@page "/add/{id}"
+@inject StagesCRUD db
+@inject NavigationManager Navigation
+@using System.Text.Json;
+@using System.Text;
+
+<h3>Добавить заказ</h3>
+
+<p>Имя</p>
+<input type="text" @bind-value=order.Name/>
+<p>Номер</p>
+<input type="number" @bind-value=order.Phone />
+@if (advSources != null)
+{
+    <p>Источник рекламы</p>
+    <select @bind=order.AdvId>
+    @foreach (var item in advSources)
+    {
+        <option value="@item.Id">@item.Name</option>
+    }
+    </select>
+}
+<p>Площадь</p>
+<input type="number" @bind-value=order.Area/>
+
+@if (jobTypes != null)
+{
+    <p>Тип работ</p>
+    <select @bind=order.JobTypeId>
+        @foreach (var item in jobTypes)
+        {
+            <option value="@item.Id">@item.Name</option>
+        }
+    </select>
+}
+
+<p>Цена за метр</p>
+<input type="number" @bind-value=order.PricePerMeter/>
+<p>Цена заказа</p>
+<input type="number" @bind-value=order.Price/>
+
+@if (stages != null)
+{
+    <p>Стадия</p>
+    <select @bind=order.StageId>
+        @foreach (var item in stages)
+        {
+            <option value="@item.Id">@item.Name</option>
+        }
+    </select>
+}
+<p>Статус @order.Status</p>
+<select @bind=status>
+    <option value="True">В работе</option>
+    <option value="False">Отказ</option>
+</select>
+<p>Уведомление @order.Notify</p>
+<input type="checkbox" @bind-value=order.Notify/>
+<input type="text" @bind-value=order.Description />
+
+<button @onclick="addcl">Сохранить</button>
+
+@code {
+    Order order = new();
+    List<AdvertisingSource>? advSources;
+    List<JobType>? jobTypes;
+    List<Stage>? stages;
+    List<Order>? or;
+    int id=0;
+    [Parameter]
+    public string Id 
+    {
+        get
+        {
+            return id.ToString(); 
+        }
+        set
+        {
+            id = Convert.ToInt32(value);
+        }
+
+    }
+    string status
+    {
+        get => order.Status.ToString();
+        set
+        {
+            order.Status = Convert.ToBoolean(value);
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        advSources = await db.GetAdvertisingSources();
+        stages = await db.GetStages();
+        jobTypes = await db.GetJobTypes();
+
+        if (id == 0)
+        {
+            or = await db.GetOrders();
+
+        }
+        else
+        {
+            order = await db.GetOrderById(id);
+        }
+        Console.WriteLine();
+
+
+    }
+    async Task addcl()
+    {
+        if (order.Id == 0)
+        {
+
+            order.RegistredDate = DateTime.UtcNow;
+            order.AuthorId = 1;
+            await db.AddOrder(order);
+
+            try
+            {
+                if (order.Notify)
+                    await send();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            order = new();
+
+
+        }
+        else
+        {
+            await db.UpdateOrder(order);
+
+            try
+            {
+                if (order.Notify)
+                    await send();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            Navigation.NavigateTo("/");
+
+        }
+    }
+    void advToClient(object args)
+    {
+
+        order.AdvId = Convert.ToInt32(args);
+    }
+    /// <summary>
+    /// Отправка данных боту в телеграм для публикации в группе тг заказа
+    /// </summary>
+    /// <returns></returns>
+    async Task send()
+    {
+        var notifyOrder = new NotifyOrder
+        (
+        order.Name,
+        order.Phone,
+        advSources.First(x => x.Id == order.AdvId).Name,
+        order.Area,
+        jobTypes.First(x => x.Id == order.JobTypeId).Name,
+        order.Description
+        );
+        var client = new HttpClient();
+        var notify = new StringContent(
+                JsonSerializer.Serialize(notifyOrder),
+                Encoding.UTF8,
+                System.Net.Mime.MediaTypeNames.Application.Json);
+
+        await client.PostAsync("http://localhost:12345", notify);
+
+    }
+    
+
+}

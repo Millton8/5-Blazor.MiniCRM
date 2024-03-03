@@ -1,0 +1,45 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">KrasimCRM</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable m-3" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3 my-2">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true">Список заказов</span>
+            </NavLink>
+        </div>
+        <div class="nav-item px-3 my-2">
+            <NavLink class="nav-link" href="add">
+                <span class="oi oi-plus" aria-hidden="true">Добавить заказ</span>
+            </NavLink>
+        </div>
+        <div class="nav-item px-3 my-2">
+            <NavLink class="nav-link" href="gradv">
+                <span class="oi oi-list-rich" aria-hidden="true">График по рекламе</span>
+            </NavLink>
+        </div>
+                <div class="nav-item px-3 my-2">
+            <NavLink class="nav-link" href="grordersadv">
+                <span class="oi oi-graph" aria-hidden="true">График по клиентам</span>
+            </NavLink>
+        </div>
+        
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

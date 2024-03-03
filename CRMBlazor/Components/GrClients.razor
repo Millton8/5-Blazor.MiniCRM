@@ -1,0 +1,91 @@
+﻿@page "/grordersadv"
+@inject StagesCRUD db
+@using CRMBlazor.Models.Statistics;
+@using MudBlazor
+@using ApexCharts;
+@using CRMBlazor.Models.Statistics.Graphic;
+
+
+
+<h3>Число клиентов в день</h3>
+
+
+<br/>
+<div>
+    <ApexChart TItem="OrdersCountByDate"
+               Options=options>
+
+        <ApexPointSeries TItem="OrdersCountByDate"
+                         Items="myDigits"
+                     Name="Общее"
+                     SeriesType="SeriesType.Bar"
+                     XValue="e => e.Date"
+                     YValue="e=> e.Count"
+                         Color="#F1948A"
+                                  ShowDataLabels />
+
+
+@foreach (var item in advertises)
+        {
+            var rnd = new Random().Next(1, 99);
+            Task.Delay(5);
+            var rnd2 = new Random().Next(0, 10);
+            
+            
+            var color = $"#A{rnd2}{rnd2}B{rnd}";
+            <ApexPointSeries TItem="OrdersCountByDate"
+                             Items="myDigits"
+                             Name=@item
+                             SeriesType="SeriesType.Line"
+                             XValue="e => e.Date"
+                             YValue="e=> abc(e.Date,item)"
+                                      ShowDataLabels Color=@color />
+
+        }
+       
+     </ApexChart>
+</div>
+
+
+@code {
+    List<OrdersCountByDate> myDigits = new();
+    List<string> advertises = new();
+    ApexChartOptions<OrdersCountByDate> options;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        myDigits = await db.GetOrderCountByDate();
+        options = new ApexChartOptions<OrdersCountByDate>
+            {
+                Theme = new Theme
+                {
+                    Mode = Mode.Dark
+
+                }
+            };
+
+        
+        foreach (var item in myDigits)
+        {
+            foreach (var itemk in item.Counts)
+            {
+                if (!advertises.Contains(itemk.Name))
+                    advertises.Add(itemk.Name);
+            }
+        }
+        
+        
+    }
+    int abc(DateTime? date,string name)
+    {
+        var digits = myDigits.Where(x => x.Date == date).Select(x => x.Counts).First();
+        int i = digits.FindIndex(x=>x.Name==name);
+        if (i == -1)
+            return 0;
+        if (digits[i].Name == name)
+            return digits[i].Count;
+        else
+            return 0;
+    }
+}

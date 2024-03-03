@@ -1,0 +1,172 @@
+﻿@page "/advstats"
+@inject StagesCRUD db
+@using CRMBlazor.Models.Statistics;
+<h3>AdvStatistics</h3>
+<p>Добавить advStat</p>
+
+<input type="date" @bind-value=advStat.Date/>
+@if (advSources != null)
+{
+    <select @bind=advStat.advSourceId>
+        <option value="0">Источник рекламы</option>
+        @foreach (var item in advSources)
+        {
+            <option value="@item.Id">@item.Name</option>
+        }
+    </select>
+}
+<button @onclick="addGeneral">Добавить главное</button>
+
+
+
+@if (advStats != null)
+{
+
+
+    @foreach (var item in advStats)
+    {
+        <tr>
+            <td>
+                @item.Date.ToString("Y")
+                
+            </td>
+            <td>
+
+                <select @bind=item.advSourceId @bind:after="change">
+                    
+                    @foreach (var adv in advSources)
+                    {
+                        <option value="@adv.Id">@adv.Name </option>
+                    }
+                </select>
+                                
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+                @if (jobTypes != null)
+                {
+                    
+                    <select @bind=advByJob.jobTypeId>
+                        <option value="0">Тип работ</option>
+                        @foreach (var job in jobTypes)
+                        {
+                            <option value="@job.Id">@job.Name</option>
+                        }
+                    </select>
+                }
+            </td>
+            <td>
+                <button @onclick="(()=>addSecondary(item.Id))">Добавить к этому</button>
+            </td>
+        </tr>
+
+
+        <table>
+            <thead>
+                <th>Вид работ</th>
+                <th>Расход</th>
+                <th>Просмотры</th>
+                <th>Контакты</th>
+                <th>Стоимость контакта</th>
+                <th>Сумма заказов</th>
+                <th>Продаж</th>
+                <th>Продаж на сумму</th>
+            </thead>
+            @foreach (var itemk in item.AdvByJobTypes)
+            {
+                <tr>
+
+                    <td>
+                        @itemk?.jobType.Name
+                    </td>
+                    <td>
+                        <input type="number" @bind=itemk.Expense @bind:after="change"/>
+                    </td>
+                    <td>
+                        <input type="number" @bind=itemk.Views @bind:after="change" />
+                    </td>
+                    <td>
+                        <input type="number" @bind=itemk.Contacts @bind:after="change" />
+                    </td>
+                    <td>
+                        @if (itemk.Expense != 0 && itemk.Contacts != 0)
+                        {
+                            @(itemk.Expense / itemk.Contacts)
+                        }
+                        else
+                        {
+                            @(0)
+                        }
+
+                    </td>
+                    <td>
+                        <input type="number" @bind=itemk.Turnover @bind:after="change" />
+                    </td>
+                    <td>
+                        <input type="number" @bind=itemk.SalesCount @bind:after="change" />
+                    </td>
+                    <td>
+                        <input type="number" @bind=itemk.Sales @bind:after="change" />
+                    </td>
+                </tr>
+            }
+
+
+            
+
+        </table>
+        <br/>
+    }
+
+}
+
+@code {
+    AdvByJobType advByJob = new ();
+    AdvertiseStatatisticsByJobTypes advStat = new();
+    List<AdvertisingSource>? advSources;
+    List<JobType>? jobTypes;
+    List<AdvertiseStatatisticsByJobTypes> advStats;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        advSources = await db.GetAdvertisingSources();
+        jobTypes = await db.GetJobTypes();
+        advStats = await db.GetAdvStatsByJob();
+
+    }
+    async Task Save()
+    {
+        advByJob.AdvertiseStatatisticsByJobTypesId = 1;
+        await db.AddAdvByJob(advByJob);
+        advByJob = new();
+        advStats = await db.GetAdvStatsByJob();
+    }
+    async Task change()
+    {
+        await db.Save();
+    }
+    async Task addRow()
+    {
+        advStats[0].AdvByJobTypes.Add(new AdvByJobType {jobTypeId=1});
+    }
+    async Task addGeneral()
+    {
+        await db.AddAdvStatatisticsByJobTypes(advStat);
+    }
+    async Task addSecondary(int id)
+    {
+        Console.WriteLine("begin>> " + id);
+        advByJob.AdvertiseStatatisticsByJobTypesId = id;
+        await db.AddAdvByJob(advByJob);
+        advByJob = new();
+        advStats = await db.GetAdvStatsByJob();
+        Console.WriteLine("end>> "+id);
+    }
+
+
+
+}

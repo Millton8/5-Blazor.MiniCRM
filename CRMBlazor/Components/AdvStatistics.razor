@@ -1,0 +1,114 @@
+﻿@page "/ad"
+@inject StagesCRUD db
+@using CRMBlazor.Models.Statistics;
+<h3>AdvStatistics</h3>
+<input type="date" @bind-value=advStat.Date/>
+@if (advSources != null)
+{
+    <select @bind=advStat.advSourceId>
+        @foreach (var item in advSources)
+        {
+            <option value="@item.Id">@item.Name</option>
+        }
+    </select>
+}
+@if (jobTypes != null)
+{
+    <p>Тип работ</p>
+    <select @bind=advStat.jobTypeId>
+        @foreach (var item in jobTypes)
+        {
+            <option value="@item.Id">@item.Name</option>
+        }
+    </select>
+    <button @onclick="Save">Сохранить</button>
+}
+@if (advStats != null)
+{
+    <table>
+        <thead> 
+            <th>Дата</th>
+            <th>Источник</th>
+            <th>Вид работ</th>
+            <th>Потрачено</th>
+            <th>Просмотры</th>
+            <th>Контакты</th>
+            <th>Стоимость контакта</th>
+            <th>Оборот</th>
+            <th>Продаж</th>
+            <th>Продаж на сумму</th>
+         </thead>
+        
+            
+        @foreach (var item in advStats)
+        {<tr>
+            <td>
+                @item.Date.ToString("Y")
+            </td>
+                <td>
+                    <select @bind=item.advSourceId @bind:after="change">
+                        <option selected="selected">@item.advSource.Name</option>
+                        @foreach (var adv in advSources)
+                        {
+                            <option value="@adv.Id">@adv.Name</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    @item.jobType.Name
+                </td>
+                <td>
+                    <input type="number" @bind=item.Expense @bind:after="change"/>
+                </td>
+                <td>
+                    <input type="number" @bind=item.Views @bind:after="change" />
+                </td>
+                <td>
+                    <input type="number" @bind=item.Contacts @bind:after="change" />
+                </td>
+                <td>
+                    <input type="number" @bind=item.ContactCost @bind:after="change" />
+                </td>
+                <td>
+                    <input type="number" @bind=item.Turnover @bind:after="change" />
+                </td>
+                <td>
+                    <input type="number" @bind=item.SalesCount @bind:after="change" />
+                </td>
+                <td>
+                    <input type="number" @bind=item.Sales @bind:after="change" />
+                </td>
+
+        </tr>
+        }
+        
+    </table>
+    
+    
+}
+
+@code {
+    AdvertiseStatatistics advStat = new ();
+    List<AdvertisingSource>? advSources;
+    List<JobType>? jobTypes;
+    List<AdvertiseStatatistics> advStats;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        advSources = await db.GetAdvertisingSources();
+        jobTypes = await db.GetJobTypes();
+        advStats = await db.GetAdvertiseStatistics();
+    }
+    async Task Save()
+    {
+        await db.AddAdvertiseStatistics(advStat);
+        advStat = new();
+        advStats = await db.GetAdvertiseStatistics();
+    }
+    async Task change()
+    {
+        await db.Test();
+    }
+
+}

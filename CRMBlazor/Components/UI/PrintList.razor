@@ -1,0 +1,25 @@
+﻿@typeparam T
+@using CRMBlazor.Interface
+<h3>PrintList</h3>
+<ul>
+@if (list != null)
+    foreach (var item in list)
+    {
+        if (item is IName n)
+        {
+            <li>@n.Name</li>
+        }
+    } 
+</ul>
+
+@code {
+    [Parameter]
+    public List<T> list { get; set; }
+    List<IName> names;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+}
